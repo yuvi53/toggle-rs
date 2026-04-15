@@ -10,15 +10,17 @@ pub use State::{Start, Stop};
 
 
 #[derive(Debug)]
-pub struct Project {
+pub struct Data {
     name: String,
-    duration: Duration,
+    state: State,
+    timestamp: u64,
 }
 
-impl Project {
-    pub fn new(name: String) -> Self {
-        let duration = Duration::new(0, 0);
-        Project { name, duration }
+impl Data {
+    pub fn new(name: String, state: State, timestamp: u64) -> Self {
+        Data {name, state, timestamp}
     }
 }
+
+
 
