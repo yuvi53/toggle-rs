@@ -11,7 +11,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let state = match &*args[1] {
         "--start" => Start,
         "--stop" => Stop,
-        _ => Start,
+        _ => panic!("your state strings are not working!"),
     };
     let mut file = OpenOptions::new()
         .read(true)
@@ -23,5 +23,9 @@ fn main() -> Result<(), Box<dyn Error>> {
         .unwrap()
         .as_secs();
     write!(&mut file, "{}\t{:?}\t{}\n", project_name, state, timestamp);
+    println!("here have a look at the database:\n");
+    for data in read_database() {
+        println!("{:?}", data);
+    }
     Ok(())
 }
