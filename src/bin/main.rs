@@ -1,8 +1,5 @@
 use std::env;
 use std::error::Error;
-use std::fs::OpenOptions;
-use std::io::Write;
-use std::time::{self, UNIX_EPOCH};
 use toggle_rs::*;
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -13,16 +10,14 @@ fn main() -> Result<(), Box<dyn Error>> {
         "--stop" => Stop,
         _ => panic!("your state strings are not working!"),
     };
-    let mut file = OpenOptions::new()
-        .read(true)
-        .append(true)
-        .create(true)
-        .open("database.txt")?;
-    let timestamp = time::SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_secs();
-    write!(&mut file, "{}\t{:?}\t{}\n", project_name, state, timestamp);
+    let previous_state = match filter_for(&args[2]).pop() {
+        Some(data) => data.state,
+        None => Stop,
+    };
+
+    if state != previous_state {
+        write_timestamp(&args[2], state)?;
+    }
     println!("here have a look at the database:\n");
     for data in read_database() {
         println!("{:?}", data);
