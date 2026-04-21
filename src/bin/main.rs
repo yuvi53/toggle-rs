@@ -1,5 +1,6 @@
 use std::env;
 use std::error::Error;
+use std::time::Duration;
 use toggle_rs::*;
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -18,9 +19,16 @@ fn main() -> Result<(), Box<dyn Error>> {
     if state != previous_state {
         write_timestamp(&args[2], state)?;
     }
-    println!("here have a look at the database:\n");
-    for data in read_database() {
-        println!("{:?}", data);
+    println!("here have a look at the database:");
+    for data in get_timeblocks(&args[2]) {
+        println!("{}", data);
     }
+    
+    println!("\ntotal time spent on project {}:",&args[2]);
+    let mut total_time: u64 = 0;
+    for timeblock in get_timeblocks(&args[2]) {
+        total_time += timeblock.secs;
+    }
+    show_time(total_time);
     Ok(())
 }
