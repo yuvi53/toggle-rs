@@ -1,13 +1,13 @@
-use std::time::Duration;
-use std::fs::OpenOptions;
-use std::io::Write;
-use std::time::{self, UNIX_EPOCH};
-use std::fs;
 use std::error::Error;
+use std::fmt;
+use std::fs;
+use std::fs::OpenOptions;
 use std::io::ErrorKind;
+use std::io::Write;
+use std::time::Duration;
+use std::time::{self, UNIX_EPOCH};
 
-#[derive(PartialEq)]
-#[derive(Debug)]
+#[derive(PartialEq, Debug)]
 pub enum State {
     Start,
     Stop,
@@ -24,7 +24,38 @@ pub struct Data {
 
 impl Data {
     pub fn new(name: String, state: State, timestamp: u64) -> Self {
-        Data {name, state, timestamp}
+        Data {
+            name,
+            state,
+            timestamp,
+        }
+    }
+}
+
+pub struct TimeBlock {
+    pub start_timestamp: u64,
+    pub stop_timestamp: u64,
+    pub secs: u64,
+}
+
+impl fmt::Display for TimeBlock {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut h = 0;
+        let mut m = 0;
+        let mut s = 0;
+
+        for _ in 0..self.secs {
+            s += 1;
+            if s > 59 {
+                s = 0;
+                m += 1;
+            }
+            if m > 59 {
+                m = 0;
+                h += 1;
+            }
+        }
+        write!(f, "{h}hours {m}minutes {s}seconds")
     }
 }
 
@@ -35,13 +66,13 @@ pub fn read_database() -> Vec<Data> {
             ErrorKind::NotFound => {
                 fs::File::create("database.txt").unwrap();
                 return Vec::new();
-            },
+            }
             _ => panic!("{error:?}"),
-        }
+        },
     };
     let results: Vec<Data> = file
         .lines()
-        .map( |line| {
+        .map(|line| {
             let v: Vec<&str> = line.split("\t").collect();
             let name = v[0].to_string();
             let state = match &*v[1] {
@@ -50,19 +81,26 @@ pub fn read_database() -> Vec<Data> {
                 _ => Start,
             };
             let timestamp = v[2].parse::<u64>().unwrap();
-            Data {name, state, timestamp}
+            Data {
+                name,
+                state,
+                timestamp,
+            }
         })
-    .collect();
+        .collect();
     results
 }
 
 pub fn filter_for(project_name: &str) -> Vec<Data> {
     let database = read_database();
-    let mut filtered_database: Vec<Data> = database.into_iter().filter(|data| data.name == project_name).collect();
+    let mut filtered_database: Vec<Data> = database
+        .into_iter()
+        .filter(|data| data.name == project_name)
+        .collect();
     filtered_database
 }
 
-pub fn write_timestamp(project_name: &str, state: State) -> Result<(), Box<dyn Error>>{
+pub fn write_timestamp(project_name: &str, state: State) -> Result<(), Box<dyn Error>> {
     let mut file = OpenOptions::new()
         .read(true)
         .append(true)
@@ -75,17 +113,46 @@ pub fn write_timestamp(project_name: &str, state: State) -> Result<(), Box<dyn E
     write!(&mut file, "{}\t{:?}\t{}\n", project_name, state, timestamp);
     Ok(())
 }
-    //sort the timestamp for the new frist for a given project
-    //which brings as back to our first point(that we didn't mention, sorry for that!)to filter the regex with the
-    //name given with the envocking argmuments
 
-/*
-fn next_after_read_database() {
-     if vec.pop().unwrap().state == Start {
-         //don't allow any new creation of the timestamp for the same project
-    }
-     else {
-         // do allow creation of timestamp for the same project
+pub fn get_timeblocks(project_name: &str) -> Vec<TimeBlock> {
+    let entries = filter_for(&project_name);
+    let mut timeblocks: Vec<TimeBlock> = Vec::new();
+    if entries.len() % 2 == 0 && entries.len() != 0 {
+        for i in 0..entries.len() {
+            if i % 2 == 0 {
+                let start_timestamp = entries[i].timestamp;
+                let stop_timestamp = entries[i + 1].timestamp;
+                let secs = entries[i + 1].timestamp - entries[i].timestamp;
+                timeblocks.push(TimeBlock {
+                    start_timestamp,
+                    stop_timestamp,
+                    secs,
+                })
+            } else {
+                continue;
+            }
+        }
+        timeblocks
+    } else {
+        Vec::new()
     }
 }
-*/
+
+pub fn show_time(secs: u64) {
+    let mut h = 0;
+    let mut m = 0;
+    let mut s = 0;
+
+    for _ in 0..secs {
+        s += 1;
+        if s > 59 {
+            s = 0;
+            m += 1;
+        }
+        if m > 59 {
+            m = 0;
+            h += 1;
+        }
+    }
+    println!("{h}hours {m}minutes {s}seconds");
+}
