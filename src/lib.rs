@@ -133,6 +133,24 @@ pub fn get_timeblocks(project_name: &str) -> Vec<TimeBlock> {
             }
         }
         timeblocks
+    } else if entries.len() % 2 != 0 && entries.len() > 1 {
+        let range = entries.len() - 1;
+        for i in 0..range {
+            if i % 2 == 0 {
+                let start_timestamp = entries[i].timestamp;
+                let stop_timestamp = entries[i + 1].timestamp;
+                let secs = entries[i + 1].timestamp - entries[i].timestamp;
+                timeblocks.push(TimeBlock {
+                    start_timestamp,
+                    stop_timestamp,
+                    secs,
+                })
+            } else {
+                continue;
+            }
+        }
+        timeblocks
+
     } else {
         Vec::new()
     }
