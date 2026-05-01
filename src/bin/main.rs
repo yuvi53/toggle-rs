@@ -17,6 +17,11 @@ fn main() -> Result<(), Box<dyn Error>> {
     };
 
     if state != previous_state {
+        if let Some(last_project_entry) = read_database().pop() {
+            if last_project_entry.state == Start {
+                write_timestamp(&last_project_entry.name, Stop); 
+            }
+        };
         write_timestamp(&args[2], state)?;
     }
     println!("here have a look at the database:");
