@@ -60,11 +60,11 @@ impl fmt::Display for TimeBlock {
 }
 
 pub fn read_database() -> Vec<Data> {
-    let file = match fs::read_to_string("database.txt") {
+    let file = match fs::read_to_string("/home/yuvi/.local/share/toggle-rs/database.txt") {
         Ok(file) => file,
         Err(error) => match error.kind() {
             ErrorKind::NotFound => {
-                fs::File::create("database.txt").unwrap();
+                fs::File::create("/home/yuvi/.local/share/toggle-rs/database.txt").unwrap();
                 return Vec::new();
             }
             _ => panic!("{error:?}"),
@@ -105,7 +105,7 @@ pub fn write_timestamp(project_name: &str, state: State) -> Result<(), Box<dyn E
         .read(true)
         .append(true)
         .create(true)
-        .open("database.txt")?;
+        .open("/home/yuvi/.local/share/toggle-rs/database.txt")?;
     let timestamp = time::SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap()
